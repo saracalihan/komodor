@@ -11,11 +11,23 @@ with passing stdin
 
 ## Usage
 1. **Create test object**. You can define custom settings here.
+On default, we run given program on to the `/bin/sh` with `-c` flag.
+You can change the shell or u can run only your program with `shell`
+field.
 
 ```c
 #include "komodor.h"
 
 int main(){
+    // KomodorConfig config = {
+    //     .shell ="/bin/zsh",
+    //     .shell_flags={
+    //         "-c",
+    //         "--beep",
+    //     },
+    //     .shell_flags_len =2
+    // };
+    // KomodorTest t = komodor_create_test("./myprogram", &config);
     KomodorTest t = komodor_create_test("./myprogram", NULL);
 
     return 0;
