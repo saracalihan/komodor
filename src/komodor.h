@@ -12,8 +12,9 @@
 
 typedef struct{
     char* shell;
-    char* shell_flags;
-    char* argumans;
+    char* shell_flags[256];
+    size_t shell_flags_len;
+    char* argumants;
 }KomodorConfig;
 
 typedef struct{
@@ -44,11 +45,15 @@ KomodorTest komodor_create_test(char* command, KomodorConfig* config){
     *test.std_error='\0';
     *test.error_message='\0';
 
-    if(NULL ==config){
+    if(NULL == config){
+        test.config.shell = "sh";
+        char* shell_flags[] ={
+            "-c",
+        };
 
-        test.config.shell = "/bin/sh";
-        test.config.shell_flags = ""; // "sh", "-c"
-        test.config.argumans = NULL;
+        memcpy(&test.config.shell_flags, &shell_flags, sizeof(shell_flags));
+        test.config.shell_flags_len = sizeof(shell_flags)/sizeof(char*);
+        test.config.argumants = NULL;
 
         // // Get default shell
         // system("echo $SHELL");
@@ -86,7 +91,7 @@ void komodor_define_test(KomodorTest* test, const int exit_code, const char* out
     test->expected_exit_code = exit_code;
 }
 
-void concat_buffer(char** dst, char* src){
+static inline void concat_buffer(char** dst, char* src){
     size_t dst_len = strlen(*dst),
            src_len = strlen(src),
            dst_cap = sizeof(*dst);
@@ -140,12 +145,21 @@ int komodor_exec_test(KomodorTest* test){
 
         // Execute
         test->exit_code = 0;
-        test->exit_code =execl(
+        // shell + shell_flags + command + command_arg
+        const size_t argc = 1 + test->config.shell_flags_len + 1 + 1;
+        char** argv = malloc(sizeof(char*) * argc);
+        // push shell_flags
+        argv[0] = test->config.shell;
+        for(size_t i=0; i< test->config.shell_flags_len; i++){
+            argv[i+1] = test->config.shell_flags[i];
+        }
+
+        argv[test->config.shell_flags_len+1] = test->command;
+        argv[test->config.shell_flags_len+2] = test->config.argumants;
+
+        test->exit_code =execvp(
             test->config.shell,
-            test->config.shell_flags,
-            test->command,
-            test->config.argumans,
-            (char*)NULL
+            argv
         );
 
         if(0 != test->exit_code){
@@ -182,7 +196,7 @@ int komodor_exec_test(KomodorTest* test){
         if (WIFEXITED(status)) {
             test->exit_code =WEXITSTATUS(status);
         } else {
-            printf("\nCommand did not terminate normally.\n");
+            printf("\n[KOMODOR ERROR]Command did not terminate normally.\n");
         }
     }
 
