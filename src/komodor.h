@@ -29,6 +29,7 @@ typedef struct{
     int expected_exit_code;
     char* expected_std_output;
     char* expected_std_error;
+    char* std_input;
 
     KomodorConfig config;
 }KomodorTest;
@@ -61,12 +62,19 @@ KomodorTest komodor_create_test(char* command, KomodorConfig* config){
     }
     return test;
 }
-void komodor_define_test(KomodorTest* test, const int exit_code, const char* output, const char* error){
+void komodor_define_test(KomodorTest* test, const int exit_code, const char* output, const char* input, const char* error){
     if(NULL == output){
         test->expected_std_output=malloc(sizeof(char));
         *test->expected_std_output='\0';
     } else{
         test->expected_std_output = output;
+    }
+
+    if(NULL == input){
+        test->std_input=malloc(sizeof(char));
+        *test->std_input='\0';
+    } else{
+        test->std_input = input;
     }
 
     if(NULL == error){
@@ -91,6 +99,7 @@ void concat_buffer(char** dst, char* src){
 int komodor_exec_test(KomodorTest* test){
     int stdout_pipe[2];
     int stderr_pipe[2];
+    int stdin_pipe[2];
     pid_t pid;
     int status;
     char buffer[BUFFER_SIZE];
@@ -105,6 +114,11 @@ int komodor_exec_test(KomodorTest* test){
         exit(EXIT_FAILURE);
     }
 
+    if (pipe(stdin_pipe) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
     if ((pid = fork()) == -1) {
         perror("fork");
         exit(EXIT_FAILURE);
@@ -114,12 +128,15 @@ int komodor_exec_test(KomodorTest* test){
         // Forward std to pipe
         dup2(stdout_pipe[1], STDOUT_FILENO);
         dup2(stderr_pipe[1], STDERR_FILENO);
+        dup2(stdin_pipe[0], STDIN_FILENO);
 
         // Close pipes from child
         close(stdout_pipe[0]);
         close(stdout_pipe[1]);
         close(stderr_pipe[0]);
         close(stderr_pipe[1]);
+        close(stdin_pipe[0]);
+        close(stdin_pipe[1]);
 
         // Execute
         test->exit_code = 0;
@@ -140,6 +157,9 @@ int komodor_exec_test(KomodorTest* test){
 
         exit(test->exit_code);
     } else {  // Parent
+        write(stdin_pipe[1], test->std_input, strlen(test->std_input));
+        close(stdin_pipe[1]);
+
         close(stdout_pipe[1]);
         close(stderr_pipe[1]);
 

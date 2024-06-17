@@ -1,6 +1,8 @@
 # Komodor
 Komodor is a simple E2E library for C language.
+
 You can test stdout, stderr and program's exit code
+with passing stdin
 
 **Table of contents**:
 + [Usage](#usage)
@@ -30,9 +32,10 @@ int main(){
 
     komodor_define_test(
         &t,
-        0,                // exit code
-        "Hello World!\n", // stdout
-        NULL              // stderr
+        0,                      // exit code
+        "saracalihan",          // stdin, u can use \n or \r char for multiple input
+        "Hello saracalihan!\n", // stdout
+        NULL                    // stderr
     );
 
     return 0;
@@ -49,9 +52,10 @@ int main(){
 
     komodor_define_test(
         &t,
-        0,                // exit code
-        "Hello World!\n", // stdout
-        NULL              // stderr
+        0,                      // exit code
+        "saracalihan",          // stdin
+        "Hello saracalihan!\n", // stdout
+        NULL                    // stderr
     );
 
     if(komodor_exec_test(&t)){
@@ -65,6 +69,7 @@ int main(){
     // t.expected_std_output
     // t.expected_std_error
     // t.expected_exit_code
+    // t.std_input
     // t.std_output
     // t.std_error
     // t.exit_code
