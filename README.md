@@ -102,6 +102,7 @@ int main(){
 
     // Now, you can access this fields
     //
+    // t.is_passed
     // t.expected_std_output
     // t.expected_std_error
     // t.expected_exit_code
@@ -109,7 +110,6 @@ int main(){
     // t.std_output
     // t.std_error
     // t.exit_code
-    // t.error_message // errno message or printf's "%m"
 
     komodor_free(&t);
     return 0;
@@ -117,8 +117,12 @@ int main(){
 ```
 
 ## Contributing
+This project accepts the open source and free software mentality in its main terms.
+Development and distribution are free within the framework of the rules specified 
+in the license section, BUT the course and mentality of the project depends entirely
+on my discretion. Please respect this mentality and contributing rules.
 
-`// TODO: Not implementing yet!`
+See all rules [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## License
 This project is under the [GPLv3 license](./LICENSE).

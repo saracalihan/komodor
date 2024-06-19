@@ -22,7 +22,7 @@ typedef struct{
 
 typedef struct{
     char* command;
-    int is_pass;
+    int is_passed;
 
     // command result
     int   exit_code;
@@ -99,7 +99,7 @@ void komodor_define_test(KomodorTest* test, const int exit_code, const char* out
         test->expected_std_error=malloc(sizeof(char));
         *test->expected_std_error='\0';
     } else{
-        test->expected_std_error = error;
+        test->expected_std_error = strdup(error);
     }
     test->expected_exit_code = exit_code;
 }
@@ -116,7 +116,7 @@ static inline void concat_buffer(char** dst, char* src){
 
 static inline void komodor_log_test(const KomodorTest *t){
     KOMODOR_LOG("-------------------\n");
-    KOMODOR_LOG("\t%s\n", t->is_pass==0 ? "FAILED" : "PASSED" );
+    KOMODOR_LOG("\t%s\n", t->is_passed==0 ? "FAILED" : "PASSED" );
     KOMODOR_LOG("-------------------\n");
     KOMODOR_LOG("EXPECTED:\n");
     KOMODOR_LOG("\tstdout: '%s'\n", t->expected_std_output);
@@ -229,21 +229,20 @@ int komodor_exec_test(KomodorTest* test){
         }
     }
 
-
+    test->is_passed=1;
     if(test->exit_code != test->expected_exit_code){
-        test->is_pass=0;
+        test->is_passed=0;
     }
     if(0 != strcmp(test->expected_std_output, test->std_output) ||
        0 != strcmp(test->expected_std_error,  test->std_error)
     ){
-        test->is_pass=0;
+        test->is_passed=0;
     }
-    test->is_pass=1;
 
     if(test->config.log_test ==1){
         komodor_log_test(test);
     }
-    return test->is_pass;
+    return test->is_passed;
 }
 
 void komodor_free(KomodorTest* test){
