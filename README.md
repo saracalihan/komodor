@@ -30,6 +30,7 @@ int main(){
     // KomodorTest t = komodor_create_test("./myprogram", &config);
     KomodorTest t = komodor_create_test("./myprogram", NULL);
 
+    komodor_free(&t);
     return 0;
 }
 ```
@@ -50,6 +51,7 @@ int main(){
         NULL                    // stderr
     );
 
+    komodor_free(&t);
     return 0;
 }
 ```
@@ -87,6 +89,7 @@ int main(){
     // t.exit_code
     // t.error_message // errno message or printf's "%m"
 
+    komodor_free(&t);
     return 0;
 }
 ```

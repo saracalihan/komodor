@@ -21,13 +21,12 @@ typedef struct{
     char* command;
 
     // command result
-    int exit_code;
+    int   exit_code;
     char* std_output;
     char* std_error;
-    char* error_message;
 
     // expected command result
-    int expected_exit_code;
+    int   expected_exit_code;
     char* expected_std_output;
     char* expected_std_error;
     char* std_input;
@@ -40,10 +39,8 @@ KomodorTest komodor_create_test(char* command, KomodorConfig* config){
     test.command = command;
     test.std_output=malloc(sizeof(char));
     test.std_error=malloc(sizeof(char));
-    test.error_message=malloc(sizeof(char));
     *test.std_output='\0';
     *test.std_error='\0';
-    *test.error_message='\0';
 
     if(NULL == config){
         test.config.shell = "sh";
@@ -72,14 +69,14 @@ void komodor_define_test(KomodorTest* test, const int exit_code, const char* out
         test->expected_std_output=malloc(sizeof(char));
         *test->expected_std_output='\0';
     } else{
-        test->expected_std_output = output;
+        test->expected_std_output = strdup(output);
     }
 
     if(NULL == input){
         test->std_input=malloc(sizeof(char));
         *test->std_input='\0';
     } else{
-        test->std_input = input;
+        test->std_input = strdup(input);
     }
 
     if(NULL == error){
@@ -165,7 +162,6 @@ int komodor_exec_test(KomodorTest* test){
         if(0 != test->exit_code){
             char msg[256]={0};
             sprintf(msg, "%m");
-            concat_buffer(&test->error_message, msg);
             concat_buffer(&test->std_error, msg);
         }
 
@@ -209,6 +205,14 @@ int komodor_exec_test(KomodorTest* test){
         return 0;
     }
     return 1;
+}
+
+void komodor_free(KomodorTest* test){
+    free(test->expected_std_output);
+    free(test->expected_std_error);
+    free(test->std_input);
+    free(test->std_output);
+    free(test->std_error);
 }
 
 #endif // KOMODOR_H
