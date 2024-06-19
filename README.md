@@ -26,6 +26,7 @@ int main(){
     //         "--beep",
     //     },
     //     .shell_flags_len =2
+    //     .log_test=0
     // };
     // KomodorTest t = komodor_create_test("./myprogram", &config);
     KomodorTest t = komodor_create_test("./myprogram", NULL);
@@ -62,7 +63,10 @@ int main(){
 #include "komodor.h"
 
 int main(){
-    KomodorTest t = komodor_create_test("./myprogram'", NULL);
+    KomodorConfig config = {
+        .log_test=1,
+    }
+    KomodorTest t = komodor_create_test("./myprogram'", &config);
 
     komodor_define_test(
         &t,
@@ -77,6 +81,24 @@ int main(){
     } else{
         // FAIL
     }
+
+    // Komodor log test result like this:
+    //
+    // [KOMODOR LOG] -------------------
+    // [KOMODOR LOG] 	PASSED
+    // [KOMODOR LOG] -------------------
+    // [KOMODOR LOG] EXPECTED:
+    // [KOMODOR LOG] 	stdout: 'Hello saracalihan!\n'
+    // [KOMODOR LOG] 	stderr: ''
+    // [KOMODOR LOG] 	exit code: 0
+    // [KOMODOR LOG] -------------------
+    // [KOMODOR LOG] ACTUAL:
+    // [KOMODOR LOG] 	stdin: 'saracalihan'
+    // [KOMODOR LOG] 	stdout: 'Hello saracalihan!\n'
+    // [KOMODOR LOG] 	stderr: ''
+    // [KOMODOR LOG] 	exit code: 0
+    // [KOMODOR LOG] -------------------
+
 
     // Now, you can access this fields
     //

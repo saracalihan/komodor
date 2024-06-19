@@ -8,9 +8,12 @@
 #include <string.h>
 #include <errno.h>
 
+#define KOMODOR_LOG(fmt, ...) printf("[KOMODOR LOG] "fmt, ##__VA_ARGS__)
 #define BUFFER_SIZE (16)
 
 typedef struct{
+    int log_test;
+
     char* shell;
     char* shell_flags[256];
     size_t shell_flags_len;
@@ -19,6 +22,7 @@ typedef struct{
 
 typedef struct{
     char* command;
+    int is_pass;
 
     // command result
     int   exit_code;
@@ -60,6 +64,18 @@ KomodorTest komodor_create_test(char* command, KomodorConfig* config){
         // }
 
     } else{
+        if(config->shell == 0){
+            config->shell = "sh";
+        }
+
+        if(config->shell_flags[0] ==NULL){
+            char* shell_flags[] ={
+                "-c",
+            };
+
+            memcpy(&config->shell_flags, &shell_flags, sizeof(shell_flags));
+            config->shell_flags_len = sizeof(shell_flags)/sizeof(char*);
+        }
         test.config = *config;
     }
     return test;
@@ -96,6 +112,23 @@ static inline void concat_buffer(char** dst, char* src){
         *dst = realloc(*dst, dst_len+src_len+1);
     }
     strcat(*dst, src);
+}
+
+static inline void komodor_log_test(const KomodorTest *t){
+    KOMODOR_LOG("-------------------\n");
+    KOMODOR_LOG("\t%s\n", t->is_pass==0 ? "FAILED" : "PASSED" );
+    KOMODOR_LOG("-------------------\n");
+    KOMODOR_LOG("EXPECTED:\n");
+    KOMODOR_LOG("\tstdout: '%s'\n", t->expected_std_output);
+    KOMODOR_LOG("\tstderr: '%s'\n", t->expected_std_error);
+    KOMODOR_LOG("\texit code: %d\n", t->expected_exit_code);
+    KOMODOR_LOG("-------------------\n");
+    KOMODOR_LOG("ACTUAL:\n");
+    KOMODOR_LOG("\tstdin: '%s'\n", t->std_input);
+    KOMODOR_LOG("\tstdout: '%s'\n", t->std_output);
+    KOMODOR_LOG("\tstderr: '%s'\n", t->std_error);
+    KOMODOR_LOG("\texit code: %d\n", t->exit_code);
+    KOMODOR_LOG("-------------------\n");
 }
 
 int komodor_exec_test(KomodorTest* test){
@@ -196,15 +229,21 @@ int komodor_exec_test(KomodorTest* test){
         }
     }
 
+
     if(test->exit_code != test->expected_exit_code){
-        return 0;
+        test->is_pass=0;
     }
     if(0 != strcmp(test->expected_std_output, test->std_output) ||
        0 != strcmp(test->expected_std_error,  test->std_error)
     ){
-        return 0;
+        test->is_pass=0;
     }
-    return 1;
+    test->is_pass=1;
+
+    if(test->config.log_test ==1){
+        komodor_log_test(test);
+    }
+    return test->is_pass;
 }
 
 void komodor_free(KomodorTest* test){
